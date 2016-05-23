@@ -19,10 +19,10 @@
 clear; %clc; close all;
 
 %% Parameters
-cfl     = 0.6x;	% CFL number
-tEnd    = 2.0;	% Final time
-nx      = 200;  % Number of cells/Elements
-limiter ='MC';  % MC, MM, VA.
+cfl     = 0.6;	% CFL number
+tEnd    = 90.0;	% Final time
+nx      = 2000;  % Number of cells/Elements
+limiter ='MM';  % MC, MM, VA.
 fluxMth ='LF';	% LF.
 plot_fig= 1;
 
@@ -30,18 +30,18 @@ plot_fig= 1;
 c = 1;
 
 % Discretize spatial domain
-a=-1; b=1; dx=(b-a)/nx; xc=a+dx/2:dx:b;
+a=-1; b=100; dx=(b-a)/nx; xc=a+dx/2:dx:b;
 
 % Set IC
 %u0 = zeros(size(xc));
 %u0 = sin(2*pi*xc); 
-%u0 = zeros(size(xc)) + (xc>-0.2 & xc<0.2);
-u0 = exp(-10*xc.^2);
+u0 = zeros(size(xc)) + (xc>-0.5 & xc<0.5);
+%u0 = exp(-10*xc.^2);
 %u0 = max(1-20*xc.^2,0).^2;
 %u0 = cos(5*pi*xc)+ 3*(xc>-0.3 & xc<0.3);
 %v0 = zeros(size(xc));
-v0 = zeros(size(xc));
-%v0 = u0;
+%v0 = zeros(size(xc));
+v0 = u0;
 
 % Set q-array & adjust grid for ghost cells
 nx=nx+4; q0=[u0;v0]; zero=[0;0]; q0=[zero,zero,q0,zero,zero];
@@ -70,15 +70,15 @@ while t < tEnd
     q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
     q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
     
-%     % 2nd Stage
-%     dF=WENO5_WaveRes1d(q,c,nx,dx,fluxMth);     q = 0.75*qo+0.25*(q-dt*dF);
-%     q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
-%     q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
-%     
-%     % 3rd stage
-%     dF=WENO5_WaveRes1d(q,c,nx,dx,fluxMth);     q = (qo+2*(q-dt*dF))/3;
-%     q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
-%     q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
+    % 2nd Stage
+    dF=WENO5_WaveRes1d(q,c,nx,dx,fluxMth);     q = 0.75*qo+0.25*(q-dt*dF);
+    q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
+    q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
+    
+    % 3rd stage
+    dF=WENO5_WaveRes1d(q,c,nx,dx,fluxMth);     q = (qo+2*(q-dt*dF))/3;
+    q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
+    q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
         
     % compute conserved properties
     u=q(1,:); v=q(2,:);
@@ -89,22 +89,26 @@ while t < tEnd
     % Plot figure
     if rem(it,10) == 0
         if plot_fig == 1;
-            subplot(2,1,1); plot(xc,u(2:nx-1),'.-r'); axis(region);
-            subplot(2,1,2); plot(xc,v(2:nx-1),'.-r'); axis(region);
+            subplot(2,1,1); plot(xc,u(3:nx-2),'.-r'); axis(region);
+            subplot(2,1,2); plot(xc,v(3:nx-2),'.-r'); axis(region);
             drawnow
         end
     end
 end
-cputime = toc;
+cputime = toc; disp(['CPUtime: ',num2str(cputime)])
+
+%% Post-process
 
 % Remove ghost cells
-q=q(:,2:nx-1); nx=nx-2; 
+q=q(:,3:nx-2); nx=nx-4; 
 
 % compute flow properties
 u=q(1,:); v=q(2,:);
 
 % Plots results
 figure(1);
-subplot(2,1,1); plot(xc,u,'.-r',xc,u0,':b'); xlabel('x'); ylabel('u'); axis(region); legend('MUSCL','IC'); 
+subplot(2,1,1); plot(xc,u,'.-r',xc,u0,':b'); xlabel('x'); ylabel('u'); 
+axis(region); legend('MUSCL','IC','location','southeast'); grid on;
 title('SSP-RK2 MUSCL for Wave System Eqns.')
-subplot(2,1,2); plot(xc,v,'.-r',xc,v0,':b'); xlabel('x'); ylabel('v'); axis(region); legend('MUSCL','IC');
+subplot(2,1,2); plot(xc,v,'.-r',xc,v0,':b'); xlabel('x'); ylabel('v'); 
+axis(region); legend('MUSCL','IC','location','southeast'); grid on;
