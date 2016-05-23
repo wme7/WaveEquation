@@ -19,9 +19,9 @@
 clear; %clc; close all;
 
 %% Parameters
-cfl     = 0.6;	% CFL number
+cfl     = 0.5;	% CFL number
 tEnd    = 90.0;	% Final time
-nx      = 2000;  % Number of cells/Elements
+nx      = 4000;  % Number of cells/Elements
 limiter ='MM';  % MC, MM, VA.
 fluxMth ='LF';	% LF.
 plot_fig= 1;
