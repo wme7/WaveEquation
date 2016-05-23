@@ -1,10 +1,10 @@
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%              basic MUSCL solver for Hyperbolic system equations
-%                      by Manuel Diaz, NTU, 29.04.2015
+%          A basic MUSCL solver for Hyperbolic system equations
+%                   by Manuel Diaz, NHRI, 2016.05.20
 %
-%                       [p]    [ 0 , c ][p]   
-%                       [u]t + [ c , 0 ][u]x = 0,
+%                       [u]    [ 0 , c ][u]   
+%                       [v]t + [ c , 0 ][v]x = 0,
 %
 %	MUSCL based numerical schemes extend the idea of using a linear
 %	piecewise approximation to each cell by using slope limited left and

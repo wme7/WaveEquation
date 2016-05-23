@@ -1,13 +1,13 @@
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %           A WENO solver for a System of Hyperbolic PDE's
-%                  by Manuel Diaz, NHRI, 2016.05.20
+%                  by Manuel Diaz, NHRI, 2016.05.22
 %
 %   A Numerical solver based on weno scheme for solving the second order
 %   wave equation q_tt + c^2 q_xx = 0, with c > 0, as a 1st order system
 %
-%                    [p]     [ 0 , c ][p]   
-%                    [u]_t + [ c , 0 ][u]_x = 0,
+%                    [u]     [ 0 , c ][u]   
+%                    [v]_t + [ c , 0 ][v]_x = 0,
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Refs:
