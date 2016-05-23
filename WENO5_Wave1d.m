@@ -10,21 +10,20 @@
 %                    [u]_t + [ c , 0 ][u]_x = 0,
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%	Refs:
-%   [1] LeVeque, Randall J., and Randall J. Le Veque. Numerical methods for
-%   conservation laws. Vol. 132. Basel: Birkhäuser, 1992. 
-%   [2] 
+% Refs:
+% [1] LeVeque, Randall J., and Randall J. Le Veque. Numerical methods for
+% conservation laws. Vol. 132. Basel: Birkhäuser, 1992. 
+% [2] Shu, Chi-Wang. "High order weighted essentially nonoscillatory
+% schemes for convection dominated problems." SIAM review 51.1(2009):82-126. 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; %clc; close all;
 
 %% Parameters
-cfl     = 0.5;	% CFL number
-tEnd    = 90.0;	% Final time
-nx      = 4000;  % Number of cells/Elements
-limiter ='MM';  % MC, MM, VA.
-fluxMth ='LF';	% LF.
-plot_fig= 1;
+	 nx = 4000;	% Number of cells/Elements
+    cfl = 0.5;	% CFL number
+   tEnd = 90.0;	% Final time
+plot_fig= true; % plot figures
 
 % Coefs
 c = 1;
@@ -56,27 +55,31 @@ region = [a,b,-1.2,1.2];
 % Initial time step
 dt0=cfl*dx/c;
 
+%% Solver Loop
+
 % Load IC
 q=q0; t=0; it=0; dt=dt0; 
 
-% Solver Loop
+% print to terminal dx and dt
+fprintf('using dx: %1.2f and dt: %1.2f\n',dx,dt0);
+
 tic
 while t < tEnd
     % RK Initial step
     qo = q;
     
     % 1st stage
-    dF=WENO5_WaveRes1d(q,c,nx,dx,fluxMth);     q = qo-dt*dF;
+    dF=WENO5_WaveRes1d(q,c,nx,dx,'LF');     q = qo-dt*dF;
     q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
     q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
     
     % 2nd Stage
-    dF=WENO5_WaveRes1d(q,c,nx,dx,fluxMth);     q = 0.75*qo+0.25*(q-dt*dF);
+    dF=WENO5_WaveRes1d(q,c,nx,dx,'LF');     q = 0.75*qo+0.25*(q-dt*dF);
     q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
     q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
     
     % 3rd stage
-    dF=WENO5_WaveRes1d(q,c,nx,dx,fluxMth);     q = (qo+2*(q-dt*dF))/3;
+    dF=WENO5_WaveRes1d(q,c,nx,dx,'LF');     q = (qo+2*(q-dt*dF))/3;
     q(:,1)=qo(:,3); q(:, nx )=qo(:,nx-2); % Neumann BCs
     q(:,2)=qo(:,3); q(:,nx-1)=qo(:,nx-2); % Neumann BCs
         
@@ -87,8 +90,8 @@ while t < tEnd
     dt=cfl*dx/c; if t+dt>tEnd; dt=tEnd-t; end; t=t+dt; it=it+1;
     
     % Plot figure
-    if rem(it,10) == 0
-        if plot_fig == 1;
+	if plot_fig ~= false
+        if rem(it,10) == 0
             subplot(2,1,1); plot(xc,u(3:nx-2),'.-r'); axis(region);
             subplot(2,1,2); plot(xc,v(3:nx-2),'.-r'); axis(region);
             drawnow
@@ -109,6 +112,6 @@ u=q(1,:); v=q(2,:);
 figure(1);
 subplot(2,1,1); plot(xc,u,'.-r',xc,u0,':b'); xlabel('x'); ylabel('u'); 
 axis(region); legend('MUSCL','IC','location','southeast'); grid on;
-title('SSP-RK2 MUSCL for Wave System Eqns.')
+title('SSP-RK3 WENO5 for Wave System Eqns.')
 subplot(2,1,2); plot(xc,v,'.-r',xc,v0,':b'); xlabel('x'); ylabel('v'); 
 axis(region); legend('MUSCL','IC','location','southeast'); grid on;

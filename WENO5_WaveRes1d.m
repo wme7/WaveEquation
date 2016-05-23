@@ -4,11 +4,10 @@ function res = WENO5_WaveRes1d(w,smax,nx,dx,fluxMethod)
 % Output: res = df/dx;
 %
 % Based on:
-% C.W. Shu's Lectures notes on: 'ENO and WENO schemes for Hyperbolic
-% Conservation Laws' 
+% Shu, Chi-Wang. "High order weighted essentially nonoscillatory schemes
+% for convection dominated problems." SIAM review 51.1 (2009): 82-126.  
 %
-% coded by Manuel Diaz, 02.10.2012, NTU Taiwan.
-% last update on 2016.04.29, NHRI Taiwan.
+% coded by Manuel Diaz, 2016.04.29, NHRI Taiwan.
 % *************************************************************************
 %
 % Domain cells (I{i}) reference:

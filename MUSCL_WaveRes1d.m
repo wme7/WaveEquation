@@ -16,7 +16,7 @@ function [res] = MUSCL_WaveRes1d(q,smax,dx,N,limiter,fluxMethod)
 %   |   |   |       NC: Here cells 1 and N are ghost cells%
 %     j  j+1
 %
-% Written by Manuel Diaz, NTU, 04.29.2015.
+% Written by Manuel Diaz, NHRI, 05.29.2016.
 
     % Compute and limit slopes
     K=2; res=zeros(K,N); dq=zeros(K,N); 

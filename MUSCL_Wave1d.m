@@ -17,7 +17,6 @@
 %   conservation laws. Vol. 132. Basel: Birkhäuser, 1992. 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 clear; %clc; close all;
 
 %% Parameters
@@ -26,7 +25,7 @@ tEnd    = 20.0;	% Final time
 nx      = 1000;  % Number of cells/Elements
 limiter ='MM';  % MC, MM, VA.
 fluxMth ='LF';	% LF.
-plot_fig= 1;
+plot_fig= true; % plot figures
 
 % Coefs
 c = 1;
@@ -57,10 +56,14 @@ region = [a,b,-1.2,1.2];
 % Initial time step
 dt0=cfl*dx/c;
 
+% print to terminal dx and dt
+fprintf('using dx: %1.2f and dt: %1.2f\n',dx,dt0);
+
+%% Solver Loop
+
 % Load IC
 q=q0; t=0; it=0; dt=dt0; 
 
-% Solver Loop
 tic
 while t < tEnd
     
@@ -83,15 +86,17 @@ while t < tEnd
     dt=cfl*dx/c; if t+dt>tEnd; dt=tEnd-t; end; t=t+dt; it=it+1;
     
     % Plot figure
-    if rem(it,10) == 0
-        if plot_fig == 1;
+    if plot_fig ~= false
+        if rem(it,10) == 0
             subplot(2,1,1); plot(xc,u(2:nx-1),'.r'); axis(region);
             subplot(2,1,2); plot(xc,v(2:nx-1),'.r'); axis(region);
             drawnow
         end
     end
 end
-cputime = toc;
+cputime = toc; fprintf('CPUtime: %1.2f\n',cputime);
+
+%% Post Processing
 
 % Remove ghost cells
 q=q(:,2:nx-1); nx=nx-2; 
@@ -101,6 +106,7 @@ u=q(1,:); v=q(2,:);
 
 % Plots results
 figure(1);
-subplot(2,1,1); plot(xc,u,'.r',xc,u0,':b'); xlabel('x'); ylabel('u'); axis(region); legend('MUSCL','IC'); 
-title('SSP-RK2 MUSCL for Wave System Eqns.')
-subplot(2,1,2); plot(xc,v,'.r',xc,v0,':b'); xlabel('x'); ylabel('v'); axis(region); legend('MUSCL','IC');
+subplot(2,1,1); plot(xc,u,'.r',xc,u0,':b'); xlabel('x'); ylabel('u'); 
+axis(region); legend('MUSCL','IC'); title('SSP-RK2 MUSCL for Wave System Eqns.')
+subplot(2,1,2); plot(xc,v,'.r',xc,v0,':b'); xlabel('x'); ylabel('v'); 
+axis(region); legend('MUSCL','IC');
