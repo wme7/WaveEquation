@@ -21,26 +21,26 @@ clear; %clc; close all;
 
 %% Parameters
 	 nx = 4000;	% Number of cells/Elements
-    cfl = 0.5;	% CFL number
-   tEnd = 90.0;	% Final time
+    cfl = 0.90;	% CFL number
+   tEnd = 50.0;	% Final time
 plot_fig= true; % plot figures
 
-% Coefs
-c = 1;
-
 % Discretize spatial domain
-a=-1; b=100; dx=(b-a)/nx; xc=a+dx/2:dx:b;
+a=-50; b=50; dx=(b-a)/nx; xc=a+dx/2:dx:b;
+
+% Coefs
+c=1;
 
 % Set IC
 %u0 = zeros(size(xc));
 %u0 = sin(2*pi*xc); 
-u0 = zeros(size(xc)) + (xc>-0.5 & xc<0.5);
-%u0 = exp(-10*xc.^2);
+%u0 = zeros(size(xc)) + (xc>-0.5 & xc<0.5);
+u0 = exp(-10*xc.^2);
 %u0 = max(1-20*xc.^2,0).^2;
 %u0 = cos(5*pi*xc)+ 3*(xc>-0.3 & xc<0.3);
 %v0 = zeros(size(xc));
-%v0 = zeros(size(xc));
-v0 = u0;
+v0 = zeros(size(xc));
+%v0 = u0;
 
 % Set q-array & adjust grid for ghost cells
 nx=nx+4; q0=[u0;v0]; zero=[0;0]; q0=[zero,zero,q0,zero,zero];
@@ -58,7 +58,7 @@ dt0=cfl*dx/c;
 %% Solver Loop
 
 % Load IC
-q=q0; t=0; it=0; dt=dt0; 
+q=q0; t=dt0; it=0; dt=dt0; 
 
 % print to terminal dx and dt
 fprintf('using dx: %1.2f and dt: %1.2f\n',dx,dt0);
@@ -92,8 +92,8 @@ while t < tEnd
     % Plot figure
 	if plot_fig ~= false
         if rem(it,10) == 0
-            subplot(2,1,1); plot(xc,u(3:nx-2),'.-r'); axis(region);
-            subplot(2,1,2); plot(xc,v(3:nx-2),'.-r'); axis(region);
+            subplot(2,1,1); plot(xc,u(3:nx-2),'.-r'); axis(region); grid on; grid minor;
+            subplot(2,1,2); plot(xc,v(3:nx-2),'.-r'); axis(region); grid on; grid minor;
             drawnow
         end
     end
@@ -111,7 +111,7 @@ u=q(1,:); v=q(2,:);
 % Plots results
 figure(1);
 subplot(2,1,1); plot(xc,u,'.-r',xc,u0,':b'); xlabel('x'); ylabel('u'); 
-axis(region); legend('MUSCL','IC','location','southeast'); grid on;
+axis(region); legend('MUSCL','IC','location','southeast'); grid on; grid minor;
 title('SSP-RK3 WENO5 for Wave System Eqns.')
 subplot(2,1,2); plot(xc,v,'.-r',xc,v0,':b'); xlabel('x'); ylabel('v'); 
-axis(region); legend('MUSCL','IC','location','southeast'); grid on;
+axis(region); legend('MUSCL','IC','location','southeast'); grid on; grid minor;

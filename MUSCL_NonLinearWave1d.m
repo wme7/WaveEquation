@@ -1,10 +1,10 @@
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%          A basic MUSCL solver for Hyperbolic system equations
-%                   by Manuel Diaz, NHRI, 2016.05.20
+%            A basic MUSCL solver for Hyperbolic system equations
+%                      by Manuel Diaz, NTU, 29.04.2015
 %
-%                       [u]    [ 0 , c ][u]   
-%                       [v]t + [ c , 0 ][v]x = 0,
+%                       [p]    [ 0 , r c^2 ][p]   
+%                       [u]t + [ 1 / r , 0 ][u]x = 0,
 %
 %	MUSCL based numerical schemes extend the idea of using a linear
 %	piecewise approximation to each cell by using slope limited left and
@@ -18,69 +18,64 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear; %clc; close all;
+global c r
 
 %% Parameters
-	 nx = 2000;	% Number of cells/Elements
-    cfl = 0.90;	% CFL number
-   tEnd = 50.0;	% Final time
-limiter ='MM';  % MC, MM, VA.
+     dx = 0.02; % cell size
+    cfl = 0.50;	% CFL number
+   tEnd = 10.0; % Final time
+limiter ='MC';  % MC, MM, VA.
 fluxMth ='LF';	% LF.
 plot_fig= true; % plot figures
 
 % Discretize spatial domain
-a=-50; b=50; dx=(b-a)/nx; xc=a+dx/2:dx:b;
+a=-1; b=11; xc=a+dx/2:dx:b; nx=length(xc);
 
-% Coefs
-c=1;
+% Constants
+c=1; r=1;
 
 % Set IC
 %u0 = zeros(size(xc));
 %u0 = sin(2*pi*xc); 
-%u0 = zeros(size(xc)) + (xc>-0.2 & xc<0.2);
-u0 = exp(-5*xc.^2);
+u0 = zeros(size(xc)) + (xc>-0.5 & xc<0.5);
+%u0 = exp(-5*xc.^2);
 %u0 = max(1-20*xc.^2,0).^2;
 %u0 = cos(5*pi*xc)+ 3*(xc>-0.3 & xc<0.3);
-%v0 = zeros(size(xc));
-v0 = zeros(size(xc));
-%v0 = u0;
+p0 = zeros(size(xc));
+%p0 = u0;
 
 % Set q-array & adjust grid for ghost cells
-nx=nx+2; q0=[u0;v0]; zero=[0;0]; q0=[zero,q0,zero];
+nx=nx+2; q0=[p0;u0]; zero=[0;0]; q0=[zero,q0,zero];
 
 % Boundary Conditions in ghost cells
 q0(:,1)=q0(:,2); q0(:,nx)=q0(:,nx-1);   % Natural BCs
 
 % Plot region
-region = [a,b,-1.2,1.2];
+region1 = [a,b,-1.2,1.2];
+region2 = [a,b,-1.2,1.2];
 
 % Initial time step
 dt0=cfl*dx/c;
 
 % print to terminal dx and dt
-fprintf('using dx: %1.2f and dt: %1.2f\n',dx,dt0);
+fprintf('using dx: %1.2e and dt: %1.2e\n',dx,dt0);
 
 %% Solver Loop
 
 % Load IC
-q=q0; t=dt0; it=0; dt=dt0; 
+q=q0; t=dt0; it=0; dt=dt0;
 
 tic
 while t < tEnd
     
     % RK2 1st step
-    qs = q - dt*MUSCL_WaveRes1d(q,c,dx,nx,limiter,fluxMth);
-    
-    qs(:,1)=qs(:,2); 
-    qs(:,nx)=qs(:,nx-1);   % Natural BCs
-    
+    qs = q - dt*MUSCL_NonlinearWaveRes1d(q,c,dx,nx,limiter,fluxMth,t);
+  
     % RK2 2nd step  / update q
-    q = (q + qs - dt*MUSCL_WaveRes1d(qs,c,dx,nx,limiter,fluxMth))/2;
-    
-    q(:,1)=q(:,2); 
-    q(:,nx)=q(:,nx-1);   % Natural BCs
+    q = (q + qs - dt*MUSCL_NonlinearWaveRes1d(qs,c,dx,nx,limiter,fluxMth,t+dt/2))/2;
         
     % compute conserved properties
-    u=q(1,:); v=q(2,:);
+    p=q(1,:); u=q(2,:);
     
     % Update dt and time
     dt=cfl*dx/c; if t+dt>tEnd; dt=tEnd-t; end; t=t+dt; it=it+1;
@@ -88,8 +83,8 @@ while t < tEnd
     % Plot figure
     if plot_fig ~= false
         if rem(it,10) == 0
-            subplot(2,1,1); plot(xc,u(2:nx-1),'.r'); axis(region); grid on; grid minor;
-            subplot(2,1,2); plot(xc,v(2:nx-1),'.r'); axis(region); grid on; grid minor;
+            subplot(2,1,1); plot(xc,p(2:nx-1),'.r'); axis(region1); grid minor;
+            subplot(2,1,2); plot(xc,u(2:nx-1),'.r'); axis(region2); grid minor;
             drawnow
         end
     end
@@ -102,12 +97,12 @@ cputime = toc; fprintf('CPUtime: %1.2f\n',cputime);
 q=q(:,2:nx-1); nx=nx-2; 
 
 % compute flow properties
-u=q(1,:); v=q(2,:);
+p=q(1,:); u=q(2,:);
 
 % Plots results
 figure(1);
-subplot(2,1,1); plot(xc,u,'.r',xc,u0,':b'); xlabel('x'); ylabel('u'); 
-axis(region); legend('MUSCL','IC'); gird on; grid minor;
+subplot(2,1,1); plot(xc,p,'.r',xc,p0,':b'); xlabel('x'); ylabel('p'); 
+axis(region1); legend('MUSCL','IC','location','southwest'); grid on; grid minor;
 title('SSP-RK2 MUSCL for Wave System Eqns.')
-subplot(2,1,2); plot(xc,v,'.r',xc,v0,':b'); xlabel('x'); ylabel('v'); 
-axis(region); legend('MUSCL','IC'); gird on; grid minor;
+subplot(2,1,2); plot(xc,u,'.r',xc,u0,':b'); xlabel('x'); ylabel('u'); 
+axis(region2); legend('MUSCL','IC','location','southwest'); grid on; grid minor;
